@@ -30,7 +30,8 @@ const Button = styled.TouchableOpacity`
 `;
 
 export default class LoginScreen extends Component {
-    state = { }
+    state = { };
+
     render() {
         return (
             <FlexContainer>
