@@ -1,12 +1,18 @@
 import React, { Component } from "react";
-import { Facebook } from "expo";
-import { Alert, Text } from "react-native";
+import { Facebook, Google } from "expo";
+import { Text } from "react-native";
 import styled from "styled-components/native";
+import { connect } from "react-redux";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+
+import { login } from "./actions";
+
+import { LoadingScreen } from "../../commons";
 
 import Fonts from "../../../constants/Fonts";
 import Colors from "../../../constants/Colors";
 import fbConfig from "../../../constants/fbConfig";
+import googleConfig from "../../../constants/googleConfig";
 
 const FlexContainer = styled.View`
   flex: 1;
@@ -35,6 +41,9 @@ const Button = styled.TouchableOpacity`
   paddingHorizontal: 10;
 `;
 
+@connect(state => ({
+    isLoading: state.user.isLoading,
+}), {login})
 export default class LoginScreen extends Component {
     state = {};
 
@@ -55,14 +64,33 @@ export default class LoginScreen extends Component {
         });
 
         if (type === 'success') {
-            const resp = await fetch(
-                `https://graph.facebook.com/me?access_token=${token}`,
-            );
-            Alert.alert('Logged In!', `Hi ${(await resp.json()).name}`);
+            this.props.login(token, 'facebook');
+        } else {
+            throw new Error('Something wrong with facebook auth!');
+        }
+    }
+
+    async _logInWithGoogle () {
+        try {
+            const result = await Google.logInAsync({
+                iosClientId: googleConfig.CLIENT_ID_IOS,
+                scopes: ['profile', 'email'],
+            });
+
+            if (result.type === 'success') {
+                this.props.login(result.accessToken, 'google');
+            } else {
+                return {cancelled: true};
+            }
+        } catch (e) {
+            throw e;
         }
     }
 
     render () {
+        if (this.props.isLoading) {
+            return <LoadingScreen color={Colors.redColor}/>;
+        }
         return (
             <FlexContainer>
                 <FlexContainer>
